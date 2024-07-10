@@ -1,0 +1,141 @@
+<div class="container">
+    <h2>Distribución Hipergeométrica</h2>
+    <div class="d-flex justify-content-between">
+        <form id="hypergeometricForm" class="w-50 p-2">
+            <div class="input-group mb-2">
+                <span class="input-group-text" id="addon-wrapping" for="N">Tamaño de la población (N):</span>
+                <input type="number" id="N" name="N" required class="form-control" placeholder="N" aria-label="N"
+                    aria-describedby="addon-wrapping">
+            </div>
+            <div class="input-group mb-2">
+                <span class="input-group-text" id="addon-wrapping" for="K">Número de elementos en la población
+                    (K):</span>
+                <input type="number" id="K" name="K" required class="form-control" placeholder="K" aria-label="K"
+                    aria-describedby="addon-wrapping">
+            </div>
+            <div class="input-group mb-2">
+                <span class="input-group-text" id="addon-wrapping" for="n">Tamaño de la muestra (n):</span>
+                <input type="number" id="n" name="n" required class="form-control" placeholder="n" aria-label="n"
+                    aria-describedby="addon-wrapping">
+            </div>
+            <div class="input-group mb-2">
+                <span class="input-group-text" id="addon-wrapping" for="x">Número de éxitos en la muestra (x):</span>
+                <input type="number" id="x" name="x" required class="form-control" placeholder="x" aria-label="x"
+                    aria-describedby="addon-wrapping">
+            </div>
+            <button type="submit" class="btn btn-primary mb-2">Calcular</button>
+        </form>
+
+        <div class="w-50 p-2" id="description">
+            La distribución hipergeométrica modela la probabilidad de obtener un número específico de éxitos (elementos
+            de interés) en una muestra seleccionada al azar de una población finita, sin reemplazo.
+            condiciones: ( N > 0; K > 0; n > 0; x >= 0; x <= n; x <=N ) </div>
+        </div>
+        <div class="d-flex flex-column justify-content-between" style="max-height: 35vh;">
+            <div id="hypergeometricResults"></div>
+            <canvas style="width: 100vh; height: 450px;" id="hypergeometricChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<script src="../scripts/description_animation.js"></script>
+<script src="../scripts/chart.js"></script>
+<script src="../scripts/jstat.min.js"></script>
+<script>
+    document.getElementById('hypergeometricForm').addEventListener('submit', function (event) {
+        event.preventDefault();
+        calculateHypergeometric();
+    });
+
+    document.getElementById('N').addEventListener('change', function () {
+        calculateHypergeometric();
+    });
+
+    document.getElementById('K').addEventListener('change', function () {
+        calculateHypergeometric();
+    });
+
+    document.getElementById('n').addEventListener('change', function () {
+        calculateHypergeometric();
+    });
+
+    document.getElementById('x').addEventListener('change', function () {
+        calculateHypergeometric();
+    });
+
+    function calculateHypergeometric() {
+        var N = parseInt(document.getElementById('N').value);
+        var K = parseInt(document.getElementById('K').value);
+        var n = parseInt(document.getElementById('n').value);
+        var x = parseInt(document.getElementById('x').value);
+
+        if (N <= 0 || K <= 0 || n <= 0 || x < 0 || x > n || x > N) {
+            document.getElementById('hypergeometricResults').innerHTML = '<p>¡Error! Valores incorrectos para la distribución hipergeométrica.</p>';
+            return;
+        }
+
+        var P_x_gt_xi = 1 - jStat.hypgeom.cdf(x, N, K, n);
+        var P_x_lt_xi = jStat.hypgeom.cdf(x - 1, N, K, n);
+        var P_x_ge_xi = 1 - jStat.hypgeom.cdf(x - 1, N, K, n);
+        var P_x_le_xi = jStat.hypgeom.cdf(x, N, K, n);
+        var P_x_eq_xi = jStat.hypgeom.pdf(xi, N, K, n);
+        var P_xi_lt_x_lt_xi = jStat.hypgeom.pdf(x - 1, N, K, n);
+        var P_xi_le_x_le_xi = jStat.hypgeom.pdf(x, N, K, n);
+
+        var resultHTML = `
+            <p>Probabilidades para distribución hipergeométrica:</p>
+            <p>P(x > xi): ${P_x_gt_xi}</p>
+            <p>P(x < xi): ${P_x_lt_xi}</p>
+            <p>P(x >= xi): ${P_x_ge_xi}</p>
+            <p>P(x <= xi): ${P_x_le_xi}</p>
+            <p>P(x = xi): ${P_x_eq_xi}</p>
+            <p>P(xi < x < xi): ${P_xi_lt_x_lt_xi}</p>
+            <p>P(xi <= x <= xi): ${P_xi_le_x_le_xi}</p>
+        `;
+
+
+        document.getElementById('hypergeometricResults').innerHTML = resultHTML;
+
+        var ctx = document.getElementById('hypergeometricChart').getContext('2d');
+        if (window.hypergeometricChart instanceof Chart) {
+            window.hypergeometricChart.destroy();
+        }
+
+        var xValues = [];
+        var pmfValues = [];
+
+        for (var i = Math.max(0, n - N + K); i <= Math.min(K, n); i++) {
+            xValues.push(i);
+            pmfValues.push(jStat.hypgeom.pdf(i, N, K, n));
+        }
+
+        var chartData = {
+            labels: xValues.map(String),
+            datasets: [{
+                label: `Hypergeometric(N=${N}, K=${K}, n=${n})`,
+                backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                borderColor: 'rgba(153, 102, 255, 1)',
+                borderWidth: 1,
+                data: pmfValues,
+            }]
+        };
+
+        var chartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        beginAtZero: true
+                    }
+                }]
+            }
+        };
+
+        window.hypergeometricChart = new Chart(ctx, {
+            type: 'bar',
+            data: chartData,
+            options: chartOptions
+        });
+    }
+</script>

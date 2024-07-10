@@ -1,0 +1,135 @@
+<div class="container">
+    <h2>Distribución Binomial</h2>
+    <div class="d-flex justify-content-between">
+        <form id="binomialForm" class="w-50 p-2">
+            <div class="input-group flex-nowrap mb-2">
+                <span class="input-group-text" id="addon-wrapping" for="n">Número de ensayos (n):</span>
+                <input type="number" id="n" name="n" required class="form-control" placeholder="n" aria-label="n"
+                    aria-describedby="addon-wrapping">
+            </div>
+            <div class="input-group flex-nowrap mb-2">
+                <span class="input-group-text" id="addon-wrapping" for="p">Probabilidad de éxito (p):</span>
+                <input type="number" step="0.01" id="p" name="p" required class="form-control" placeholder="p"
+                    aria-label="p" aria-describedby="addon-wrapping">
+            </div>
+            <div class="input-group flex-nowrap mb-2">
+                <span class="input-group-text" id="addon-wrapping" for="xi">Valor específico (xi):</span>
+                <input type="number" id="xi" name="xi" required class="form-control" placeholder="xi" aria-label="xi"
+                    aria-describedby="addon-wrapping">
+            </div>
+            <button type="submit" class="btn btn-primary mb-2">Calcular</button>
+        </form>
+
+        <div class="w-50 p-2" id="description">
+            La distribución binomial es un modelo estadístico que se utiliza para predecir la probabilidad de obtener un
+            número
+            específico de éxitos en un número fijo de intentos, cada uno con dos posibles resultados (éxito o fracaso) y
+            donde cada
+            intento es independiente de los demás.
+
+            condiciones: ( n >= 0; p > 0; p < 1; xi> 0; xi < n ) </div>
+
+        </div>
+        <div class="d-flex flex-column justify-content-between" style="max-height: 35vh;">
+            <div id="binomialResults"></div>
+            <canvas style="width: 100vh; height: 450px;" id="binomialChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<script src="../scripts/description_animation.js"></script>
+<script src="../scripts/chart.js"></script>
+<script src="../scripts/jstat.min.js"></script>
+<script>
+    document.getElementById('binomialForm').addEventListener('submit', function (event) {
+        event.preventDefault();
+        calculateBinomial();
+    });
+
+    document.getElementById('n').addEventListener('change', function () {
+        calculateBinomial();
+    });
+
+    document.getElementById('p').addEventListener('change', function () {
+        calculateBinomial();
+    });
+
+    document.getElementById('xi').addEventListener('change', function () {
+        calculateBinomial();
+    });
+
+    function calculateBinomial() {
+        var n = parseInt(document.getElementById('n').value);
+        var p = parseFloat(document.getElementById('p').value);
+        var xi = parseInt(document.getElementById('xi').value);
+
+        if (n <= 0 || p < 0 || p > 1 || xi < 0 || xi > n) {
+            document.getElementById('binomialResults').innerHTML = '<p>¡Error! Valores incorrectos para la distribución binomial.</p>';
+            return;
+        }
+
+        var P_x_gt_xi = 1 - jStat.binomial.cdf(xi, n, p);
+        var P_x_lt_xi = jStat.binomial.cdf(xi - 1, n, p);
+        var P_x_ge_xi = 1 - jStat.binomial.cdf(xi - 1, n, p);
+        var P_x_le_xi = jStat.binomial.cdf(xi, n, p);
+        var P_x_eq_xi = jStat.binomial.pdf(xi, n, p);
+        var P_xi_lt_x_lt_xi = jStat.binomial.pdf(xi - 1, n, p);
+        var P_xi_le_x_le_xi = jStat.binomial.pdf(xi, n, p);
+
+        var resultHTML = `
+            <p>Probabilidades para distribución binomial:</p>
+            <p>P(x > xi): ${P_x_gt_xi}</p>
+            <p>P(x < xi): ${P_x_lt_xi}</p>
+            <p>P(x >= xi): ${P_x_ge_xi}</p>
+            <p>P(x <= xi): ${P_x_le_xi}</p>
+            <p>P(x = xi): ${P_x_eq_xi}</p>
+            <p>P(xi < x < xi): ${P_xi_lt_x_lt_xi}</p>
+            <p>P(xi <= x <= xi): ${P_xi_le_x_le_xi}</p>
+        `;
+
+        document.getElementById('binomialResults').innerHTML = resultHTML;
+        var ctx = document.getElementById('binomialChart').getContext('2d');
+        if (window.binomialChart instanceof Chart) {
+            window.binomialChart.destroy();
+        }
+
+        var xValues = [];
+        var pmfValues = [];
+
+        for (var i = 0; i <= n; i++) {
+            xValues.push(i);
+            pmfValues.push(jStat.binomial.pdf(i, n, p));
+        }
+
+        var chartData = {
+            labels: xValues.map(String),
+            datasets: [{
+                label: `Binomial(n=${n}, p=${p})`,
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1,
+                data: pmfValues,
+            }]
+        };
+
+        var chartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        beginAtZero: true
+                    }
+                }]
+            }
+        };
+
+        window.binomialChart = new Chart(ctx, {
+            type: 'bar',
+            data: chartData,
+            options: chartOptions
+        });
+    }
+
+
+</script>

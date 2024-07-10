@@ -1,0 +1,120 @@
+<div class="container">
+    <h2>Distribución de Poisson</h2>
+    <div class="d-flex justify-content-between">
+        <form id="poissonForm" class="w-50 p-2">
+            <div class="input-group flex-nowrap mb-2">
+                <span class="input-group-text" id="addon-wrapping" for="lambda">Tasa (λ):</span>
+                <input type="number" id="lambda" name="lambda" required class="form-control" placeholder="λ"
+                    aria-label="λ" aria-describedby="addon-wrapping">
+            </div>
+            <div class="input-group flex-nowrap mb-2">
+                <span class="input-group-text" id="addon-wrapping" for="k">Número de eventos (k):</span>
+                <input type="number" id="k" name="k" required class="form-control" placeholder="k" aria-label="k"
+                    aria-describedby="addon-wrapping">
+            </div>
+            <button type="submit" class="btn btn-primary mb-2">Calcular</button>
+        </form>
+        <div class="w-50 p-2" id="description">
+            La distribución de Poisson es un modelo estadístico que describe el número de eventos que pueden ocurrir en
+            un intervalo de tiempo fijo, dado que estos eventos ocurren con una tasa promedio constante y de manera
+            independiente entre sí.
+            condiciones: ( λ >= 0; k > 0 )
+        </div>
+    </div>
+    <div class="d-flex flex-column justify-content-between" style="max-height: 35vh;">
+        <div id="poissonResults"></div>
+        <canvas style="width: 100vh; height: 450px;" id="poissonChart"></canvas>
+    </div>
+</div>
+
+<script src="../scripts/description_animation.js"></script>
+<script src="../scripts/chart.js"></script>
+<script src="../scripts/jstat.min.js"></script>
+<script>
+    document.getElementById('poissonForm').addEventListener('submit', function (event) {
+        event.preventDefault();
+        calculatePoisson();
+    });
+
+    document.getElementById('lambda').addEventListener('change', function () {
+        calculatePoisson();
+    });
+
+    document.getElementById('k').addEventListener('change', function () {
+        calculatePoisson();
+    });
+
+    function calculatePoisson() {
+        var lambda = parseFloat(document.getElementById('lambda').value);
+        var k = parseInt(document.getElementById('k').value);
+
+        if (lambda < 0 || k <= 0) {
+            document.getElementById('poissonResults').innerHTML = '<p>¡Error! Valores incorrectos para la distribución de Poisson.</p>';
+            return;
+        }
+
+        var P_k_gt_k = 1 - jStat.poisson.cdf(k, lambda);
+        var P_k_lt_k = jStat.poisson.cdf(k - 1, lambda);
+        var P_k_ge_k = 1 - jStat.poisson.cdf(k - 1, lambda);
+        var P_k_le_k = jStat.poisson.cdf(k, lambda);
+        var P_k_eq_k = jStat.poisson.pdf(k, lambda);
+        var P_k_gt_k_lt_k = jStat.poisson.pdf(k - 1, lambda);
+        var P_k_ge_k_le_k = jStat.poisson.pdf(k, lambda);
+
+        var resultHTML = `
+            <p>Probabilidades para distribución de Poisson:</p>
+            <p>P(x > k): ${P_k_gt_k}</p>
+            <p>P(x < k): ${P_k_lt_k}</p>
+            <p>P(x >= k): ${P_k_ge_k}</p>
+            <p>P(x <= k): ${P_k_le_k}</p>
+            <p>P(x = k): ${P_k_eq_k}</p>
+            <p>P(k < x < k): ${P_k_gt_k_lt_k}</p>
+            <p>P(k <= x <= k): ${P_k_ge_k_le_k}</p>
+        `;
+
+
+        document.getElementById('poissonResults').innerHTML = resultHTML;
+
+        var ctx = document.getElementById('poissonChart').getContext('2d');
+        if (window.poissonChart instanceof Chart) {
+            window.poissonChart.destroy();
+        }
+
+        var xValues = [];
+        var pmfValues = [];
+
+        for (var i = 0; i <= 10 * lambda; i++) {
+            xValues.push(i);
+            pmfValues.push(jStat.poisson.pdf(i, lambda));
+        }
+
+        var chartData = {
+            labels: xValues.map(String),
+            datasets: [{
+                label: `Poisson(λ=${lambda})`,
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1,
+                data: pmfValues,
+            }]
+        };
+
+        var chartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        beginAtZero: true
+                    }
+                }]
+            }
+        };
+
+        window.poissonChart = new Chart(ctx, {
+            type: 'bar',
+            data: chartData,
+            options: chartOptions
+        });
+    }
+</script>

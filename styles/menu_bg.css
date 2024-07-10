@@ -1,0 +1,27 @@
+body {
+    /* background-color: #1B2735; */
+    background-color: white;
+    color: rgb(0, 0, 0);
+}
+
+#stars-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.star {
+    position: absolute;
+    background-color: #000000;
+    border-radius: 50%;
+}
+
+@keyframes moveStar {
+    from {
+        transform: translateY(0);
+    }
+
+    to {
+        transform: translateY(-100%);
+    }
+}

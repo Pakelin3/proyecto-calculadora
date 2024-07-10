@@ -1,0 +1,133 @@
+<div class="container">
+    <h2>Distribución Normal</h2>
+    <div class="d-flex justify-content-between">
+        <form id="normalForm" class="w-50 p-2">
+            <div class="input-group flex-nowrap mb-2">
+                <span class="input-group-text" id="addon-wrapping" for="mu">Media (μ):</span>
+                <input type="number" id="mu" name="mu" required class="form-control" placeholder="μ" aria-label="μ"
+                    aria-describedby="addon-wrapping">
+            </div>
+            <div class="input-group flex-nowrap mb-2">
+                <span class="input-group-text" id="addon-wrapping" for="sigma">Desviación estándar (σ):</span>
+                <input type="number" step="0.01" id="sigma" name="sigma" required class="form-control" placeholder="σ"
+                    aria-label="σ" aria-describedby="addon-wrapping">
+            </div>
+            <div class="input-group flex-nowrap mb-2">
+                <span class="input-group-text" id="addon-wrapping" for="x">Valor específico (x):</span>
+                <input type="number" id="x" name="x" required class="form-control" placeholder="x" aria-label="x"
+                    aria-describedby="addon-wrapping">
+            </div>
+            <button type="submit" class="btn btn-primary mb-2">Calcular</button>
+        </form>
+
+        <div class="w-50 p-2" id="description">
+            La distribución normal es un modelo estadístico que se utiliza para describir datos que tienden a agruparse
+            alrededor de una media, con la forma de una campana.
+
+            Condiciones: (μ ≥ 0; σ > 0; x > 0) </div>
+
+    </div>
+    <div class="d-flex flex-column justify-content-between" style="max-height: 35vh;">
+        <div id="normalResults"></div>
+        <canvas style="width: 100vh; height: 450px;" id="normalChart"></canvas>
+    </div>
+</div>
+
+<script src="../scripts/description_animation.js"></script>
+<script src="../scripts/chart.js"></script>
+<script src="../scripts/jstat.min.js"></script>
+<script>
+    document.getElementById('normalForm').addEventListener('submit', function (event) {
+        event.preventDefault();
+        calculateNormal();
+    });
+
+    document.getElementById('mu').addEventListener('change', function () {
+        calculateNormal();
+    });
+
+    document.getElementById('sigma').addEventListener('change', function () {
+        calculateNormal();
+    });
+
+    document.getElementById('x').addEventListener('change', function () {
+        calculateNormal();
+    });
+
+    function calculateNormal() {
+        var mu = parseFloat(document.getElementById('mu').value);
+        var sigma = parseFloat(document.getElementById('sigma').value);
+        var x = parseFloat(document.getElementById('x').value);
+
+        if (sigma <= 0) {
+            document.getElementById('normalResults').innerHTML = '<p>¡Error! La desviación estándar debe ser mayor que cero.</p>';
+            return;
+        }
+
+        var P_x_gt_xi = 1 - jStat.normal.cdf(x, mu, sigma);
+        var P_x_lt_xi = jStat.normal.cdf(x, mu, sigma);
+        var P_x_ge_xi = 1 - jStat.normal.cdf(x - 1, mu, sigma);
+        var P_x_le_xi = jStat.normal.cdf(x - 1, mu, sigma);
+        var P_xi_gt_x_lt_xi = jStat.normal.pdf(x - 1, mu, sigma);
+        var P_xi_ge_x_le_xi = jStat.normal.pdf(x, mu, sigma);
+
+        var resultHTML = `
+            <p>Probabilidades para distribución normal:</p>
+            <p>P(x > xi): ${P_x_gt_xi}</p>
+            <p>P(x < xi): ${P_x_lt_xi}</p>
+            <p>P(x >= xi): ${P_x_ge_xi}</p>
+            <p>P(x <= xi): ${P_x_le_xi}</p>
+            <p>P(xi < x < xi): ${P_xi_gt_x_lt_xi}</p>
+            <p>P(xi <= x <= xi): ${P_xi_ge_x_le_xi}</p>
+        `;
+
+
+        document.getElementById('normalResults').innerHTML = resultHTML;
+
+        var ctx = document.getElementById('normalChart').getContext('2d');
+        if (window.normalChart instanceof Chart) {
+            window.normalChart.destroy();
+        }
+
+        var xValues = [];
+        var pdfValues = [];
+
+        for (var i = mu - 4 * sigma; i <= mu + 4 * sigma; i += 0.1) {
+            xValues.push(i.toFixed(2));
+            pdfValues.push(jStat.normal.pdf(i, mu, sigma));
+        }
+
+        var chartData = {
+            labels: xValues,
+            datasets: [{
+                label: `Normal(μ=${mu}, σ=${sigma})`,
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 1,
+                data: pdfValues,
+                datalabels: {
+                    color: 'rgba(255, 255, 255, 1)'
+                }
+            }]
+        };
+
+
+        var chartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        beginAtZero: true
+                    }
+                }]
+            }
+        };
+
+        window.normalChart = new Chart(ctx, {
+            type: 'line',
+            data: chartData,
+            options: chartOptions
+        });
+    }
+</script>

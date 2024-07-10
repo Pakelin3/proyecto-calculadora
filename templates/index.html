@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora</title>
+    <link rel="stylesheet" href="../styles/bootstrap css/bootstrap.min.css">
+    <link rel="stylesheet" href="../styles/menu.css">
+    <link rel="stylesheet" href="../styles/menu_bg.css">
+    <script src="../scripts/menu_bg.js"></script>
+    <script src="../scripts/jquery.js"></script>
+    <script src="../scripts/menu.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.9.1/gsap.min.js"></script>
+</head>
+
+
+<body>
+    <nav class="navbar navbar-expand-lg px-5 shadow" style="background-color: cadetblue;">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="">Calculadora</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#Distribution_DDM"
+                aria-controls="Distribution_DDM" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="Distribution_DDM">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            Distribuciones
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" data-dist="normal">Normal</a></li>
+                            <li><a class="dropdown-item" href="#" data-dist="poisson">Poisson</a></li>
+                            <li><a class="dropdown-item" href="#" data-dist="binomial">Binomial</a></li>
+                            <li><a class="dropdown-item" href="#" data-dist="hipergeometrica">Hipergeométrica</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" href="">Menu principal</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Body page -->
+    <div class="vw-100 p-5 h-75" id="body_page">
+        <div class="container d-flex align-items-center justify-content-center">
+            <h1 id="distribution-menu" style="height: fit-content;">
+                <span id="distribution-text"></span>
+                <span id="distribution-name"></span>
+            </h1>
+        </div>
+    </div>
+
+
+    <script src="../scripts/jquery.js"></script>
+    <script src="../scripts/bootstrap js/bootstrap.bundle.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('.dropdown-item').click(function () {
+                var dist = $(this).data('dist');
+                loadContent(dist);
+            });
+
+
+            function loadContent(dist) {
+                var url = '';
+                switch (dist) {
+                    case 'normal':
+                        url = 'normal.html';
+                        break;
+                    case 'poisson':
+                        url = 'poisson.html';
+                        break;
+                    case 'binomial':
+                        url = 'binomial.html';
+                        break;
+                    case 'hipergeometrica':
+                        url = 'hypergeometric.html';
+                        break;
+                    default:
+                        $('#body_page').html('<p>Seleccione una distribución válida.</p>');
+                        return;
+                }
+
+                $.ajax({
+                    url: url,
+                    success: function (data) {
+                        $('#body_page').html(data);
+                    },
+                    error: function () {
+                        $('#body_page').html('<p>Error al cargar el contenido.</p>');
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>
